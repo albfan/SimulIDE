@@ -1,0 +1,168 @@
+/***************************************************************************
+ *   Copyright (C) 2016 by santiago González                               *
+ *   santigoro@gmail.com                                                   *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, see <http://www.gnu.org/licenses/>.  *
+ *                                                                         *
+ ***************************************************************************/
+
+#include <math.h>   // fabs(x,y)
+
+#include "e-mosfet.h"
+#include "simulator.h"
+#include <QDebug>
+
+
+eMosfet::eMosfet( std::string id )
+    : eResistor( id )
+{
+    m_Pchannel = false;
+    
+    m_resist    = high_imp;
+    m_RDSon     = 1;
+    m_threshold = 3;
+    
+    m_DScurrent = cero_doub;
+    m_lastGateV = cero_doub;
+    
+    m_converged = true;
+    
+    m_ePin.resize(3);
+}
+eMosfet::~eMosfet(){}
+
+void eMosfet::initialize()
+{
+    m_resist    =  high_imp;
+    m_convTh    = 1e-5;
+    m_DScurrent = 0;
+    m_lastGateV = 0;
+    m_lastAdmit = 0;
+    m_convCount = 0;
+    
+    m_kRDSon = m_RDSon*(10-m_threshold);
+    m_Gth = m_threshold-m_threshold/4;
+    
+    m_converged = true;
+    
+    if( (m_ePin[0]->isConnected()) 
+      & (m_ePin[1]->isConnected())
+      & (m_ePin[2]->isConnected()) ) 
+    {
+        m_ePin[0]->getEnode()->addToNoLinList(this);
+        m_ePin[1]->getEnode()->addToNoLinList(this);
+        m_ePin[2]->getEnode()->addToNoLinList(this);
+    }
+    eResistor::initialize();
+}
+
+void eMosfet::setVChanged()
+{
+    double Vgs;
+    double Vds;
+    double Vd = m_ePin[0]->getVolt();
+    double Vs = m_ePin[1]->getVolt();
+    double Vg = m_ePin[2]->getVolt();
+    if( m_Pchannel )
+    {
+        Vgs = Vs-Vg;
+        Vds = Vs-Vd;
+    }
+    else
+    {
+        Vgs = Vg-Vs;
+        Vds = Vd-Vs;
+    }
+    //double dVs    = Vs- m_Vs;
+    double GateV  = Vgs - m_Gth;
+    double dGateV = fabs(m_lastGateV-GateV);
+    double Admit  = GateV/m_kRDSon;
+    
+    if( Admit > high_imp  ) Admit = high_imp;
+    if( Admit < cero_doub ) Admit = cero_doub;
+
+    qDebug() <<" ";
+    //qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
+    qDebug() <<"m_lastGateV"<<m_lastGateV<<"  GateV"<<GateV<<"   dGateV"<<dGateV;
+    //qDebug() <<"m_lastAdmit"<<m_lastAdmit<<"  Admit"<<Admit;
+
+    if( fabs(Admit-m_lastAdmit)<m_convTh )
+    {
+        qDebug() <<"CONVERGED:           m_lastAdmit"<<m_lastAdmit<<"  Admit"<<Admit;
+        m_convTh = 1e-5;
+        m_converged = true;
+        return;
+    }
+
+    if( m_lastGateV != GateV )
+    {
+        //qDebug() <<" ";
+        qDebug() << QString::fromStdString(m_elmId)<<"STAGE "<<m_converged;
+        qDebug() <<"m_lastAdmit"<<m_lastAdmit<<"  Admit"<<Admit;
+        
+        
+        if( m_converged ) 
+        {
+            m_maxA = 0;
+            m_minA = 1e14;
+            Admit = (Admit+m_lastAdmit)/2;
+        }
+        else              
+        {
+            if( m_lastAdmit > Admit )
+            {
+                if( m_lastAdmit < m_minA ) m_minA = (Admit+m_lastAdmit)/2;
+            }
+            if( m_lastAdmit < Admit )
+            {
+                if( m_lastAdmit > m_maxA ) m_maxA = (Admit+m_lastAdmit)/2;
+            }
+            Admit = (m_maxA + m_minA)/2;
+            
+            //Admit = (Admit+m_lastAdmit*dGateV*1000)/(dGateV*1000+1);
+            qDebug() <<"max"<<m_maxA<<"min"<<m_minA<< "   Final Admit"<<Admit;
+        }
+        
+        //m_convTh *= 1.2;
+        m_converged = false;
+    }
+    else m_converged = true;
+    
+    if( Admit > high_imp ) Admit = high_imp;
+    if( Admit < cero_doub ) Admit = cero_doub;
+    if( Admit != m_lastAdmit )
+    {
+        m_resist = 1/Admit;
+        eResistor::stamp();
+    }
+    
+    double DScurrent = 0;
+    if( (GateV>0.1)&(Vds > GateV) ) 
+    {
+        double Vdg = Vds-GateV+0.1;
+        DScurrent = Vdg/m_resist;
+        DScurrent -= DScurrent / (1 + Vdg );
+        if( DScurrent < 0 )  DScurrent = 0;
+    }
+    if( DScurrent != m_DScurrent)
+    {
+        m_DScurrent = DScurrent;
+        m_ePin[0]->stampCurrent( DScurrent );
+        m_ePin[1]->stampCurrent(-DScurrent );
+    }
+    //qDebug() << "m_resist"<<m_resist<< "     DScurrent"<<DScurrent;
+    m_lastGateV = GateV;
+    m_lastAdmit = Admit;
+    m_Vs = Vs;
+}

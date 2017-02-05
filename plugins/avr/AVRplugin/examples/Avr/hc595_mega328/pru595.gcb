@@ -1,0 +1,28 @@
+
+#chip mega328P, 16
+
+#include "74hc595.gcb"
+
+#define SER     portb.1
+#define OE      portb.2
+#define RCLK    portb.3
+#define SRCLK   portb.4
+#define SRCLR   portb.5
+
+init595
+do
+wait 1 sec
+for num0=1 to 3
+    shiftByte( b'11111111' )
+next
+wait 1 sec
+
+tempbyte = b'0000000'  
+for num0=1 to 3
+    for num=1 to 8
+        shiftBit( tempbyte.0 )
+        rotate tempbyte right simple
+        wait 1 sec
+    next
+next
+loop

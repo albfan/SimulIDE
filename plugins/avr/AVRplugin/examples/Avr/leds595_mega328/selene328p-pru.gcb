@@ -1,0 +1,91 @@
+
+#chip mega328p, 16
+
+#include <multitasking.h>
+#define m_res 50
+#define base_time 200
+
+#define Task1 stepPwm
+#define Task1_us base_time
+#define Run_Task1
+cont_Task1 = 1
+
+#define Task2 shiftPwm
+#define Task2_us base_time
+#define Run_Task2
+
+#define LTask5 spetOut
+#define LTask5_ms 50
+#define Run_LTask5
+
+#define pinRClk PORTB.3
+#define pinSClk PORTB.4
+#define pinSer1 PORTB.1
+
+dim _PwmDuty1( 8 )
+
+Do
+
+  Duty1 = Random/5
+  Duty2 = Random/5
+  Duty3 = Random/5
+  
+  
+
+  wait 300 ms
+  
+Loop
+
+macro spetOut
+  for outBit=7 to 1
+  preOutBit = outBit-1
+   _PwmDuty1( outBit ) = _PwmDuty1( preOutBit )
+  next
+  
+  PwmDuty1 = _PwmDuty1( 0 )
+  if Duty1 > PwmDuty1 then _PwmDuty1( 0 ) = PwmDuty1+( Duty1-PwmDuty1 )/2
+  if Duty1 < PwmDuty1 then _PwmDuty1( 0 ) = PwmDuty1-( PwmDuty1-Duty1 )/2
+  
+End Macro
+
+Macro stepPwm
+  PwmCont += 1
+  if PwmCont > m_res then PwmCont = 0
+  
+  regSer1 = 255
+   
+  step_pwmReg( 0 )
+  step_pwmReg( 1 )                              ' Calculate bit outputs
+  step_pwmReg( 2 )
+  step_pwmReg( 3 )
+  step_pwmReg( 4 )
+  step_pwmReg( 5 )
+  step_pwmReg( 6 )
+  step_pwmReg( 7 )
+  
+End Macro
+
+Macro step_pwmReg( _pbit )
+  'step_pwm:
+  if PwmCont < _PwmDuty1(_pbit ) then regSer1._pbit = 0
+
+End Macro
+
+Macro shiftPwm
+  pinRClk = 0
+  shiftOutBit( 0 )
+  shiftOutBit( 1 )
+  shiftOutBit( 2 )
+  shiftOutBit( 3 )
+  shiftOutBit( 4 )
+  shiftOutBit( 5 )
+  shiftOutBit( 6 )
+  shiftOutBit( 7 )
+  pinRClk = 1
+End Macro
+
+Macro shiftOutBit( _bit )
+  pinSClk = 0
+  pinSer1 = regSer1._bit
+  pinSClk = 1
+End Macro

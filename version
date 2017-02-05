@@ -1,0 +1,7 @@
+
+VERSION = "0.3.1"
+
+_ARCH = "Lin"
+_BITS = "64"
+
+

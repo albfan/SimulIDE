@@ -1,37 +1,67 @@
-## Welcome to GitHub Pages
+# SimulIDE
 
-You can use the [editor on GitHub](https://github.com/Arcachofo/SimulIDE/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Electronic Circuit Simulator
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+SimulIDE is a simple real time electronic circuit simulator.
 
-### Markdown
+It's intended for general purpose electronics and microcontroller simulation, supporting PIC and AVR.
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+PIC simulation is provided by gpsim and avr simulation by simavr.
 
-```markdown
-Syntax highlighted code block
+This is not an accurate simulator for circuit analisis, it aims to be the fast, simple and easy to use, so this means simple and not very accurate electronic models and limited features.
 
-# Header 1
-## Header 2
-### Header 3
+Intended for hobbist or students to learn and experiment with simple circuits.
 
-- Bulleted
-- List
+## Building SimulIDE:
 
-1. Numbered
-2. List
+You need several dependencies:
+ - qt5
+ - qt serialport
+ - freeglut3
+ - simavr
+ - gpsim
 
-**Bold** and _Italic_ and `Code` text
+Once installed:
 
-[Link](url) and ![Image](src)
+```
+$ cd build
+$ qmake .
+$ make
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+## Building plugins:
 
-### Jekyll Themes
+Components like arduino are provided as plugins
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/Arcachofo/SimulIDE/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+```
+$ cd plugins
+$ qmake .
+$ make
+$ cd avr
+$ qmake .
+$ make
+$ cd ..
+$ cd arduino
+$ qmake .
+$ make
+```
 
-### Support or Contact
+## Running SimulIDE:
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+You need to copy all necessary files to release directory
+
+```
+cd release/SimulIDE_<ersion>-<arch>
+mkdir plugins
+cp ../../plugins/arduino/Arduino328plugin/Arduino328plugin_0.3.1-Lin64/libarduino328plugin.so plugins/
+cp ../../plugins/avr/AVRplugin/AVRplugin_0.3.1-Lin64/libavrplugin.so plugins/
+cp ../../plugins/arduino/Arduino328plugin/data/ data
+cp -r ../../plugins/arduino/Arduino328plugin/data/ data
+cp -r ../../plugins/arduino/Arduino328plugin/examples examples
+```
+
+Now you can run program
+
+```
+./SimulIDE_0.3.1 
+```

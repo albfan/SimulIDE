@@ -2,6 +2,8 @@
 
 Electronic Circuit Simulator
 
+![SimulIDE screenshot](doc/simulide-screenshot.png)
+
 SimulIDE is a simple real time electronic circuit simulator.
 
 It's intended for general purpose electronics and microcontroller simulation, supporting PIC and AVR.

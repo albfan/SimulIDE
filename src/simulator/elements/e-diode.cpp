@@ -19,6 +19,7 @@
 
 #include "e-diode.h"
 #include "e-node.h"
+#include "math.h"
 
 eDiode::eDiode( std::string id ) : eResistor(id )
 {

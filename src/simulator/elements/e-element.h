@@ -48,11 +48,11 @@ class eElement
         
         virtual bool converged() { return m_converged; }
 
-        static const double cero_doub = 1e-14;
-        static const double high_imp = 1e14;
-        static const double digital_high = 5.0;
-        static const double digital_low = 0.0;
-        static const double digital_threshold = 2.5;
+        static constexpr double cero_doub = 1e-14;
+        static constexpr double high_imp = 1e14;
+        static constexpr double digital_high = 5.0;
+        static constexpr double digital_low = 0.0;
+        static constexpr double digital_threshold = 2.5;
 
 
     protected:

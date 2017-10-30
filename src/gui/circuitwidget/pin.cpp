@@ -87,10 +87,10 @@ void Pin::findNodePins()     // Called by connector closing or other pin
     m_blocked = false;
 }
 
-/*double Pin::getVolt()
+double Pin::getVolt()
 {
     return ePin::getVolt();
-}*/
+}
 
 void  Pin::setConnector( Connector* connector )
 {

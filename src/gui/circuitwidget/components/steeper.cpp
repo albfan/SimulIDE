@@ -19,6 +19,7 @@
 
 #include "steeper.h"
 #include "simulator.h"
+#include "math.h"
 
 Component*  Steeper::construct( QObject* parent, QString type, QString id )
 {

@@ -12,11 +12,11 @@ HEADERS =   arduino328.h \
             ../avr_common/avrprocessor.h 
 
 INCLUDEPATH += ../avr_common \
-               ../avr_common/simavr/sim 
+               /usr/include/simavr 
 
 DESTDIR = Arduino328plugin/Arduino328plugin_$$VERSION-$$_ARCH$$_BITS
 
-LIBS  += ../avr_common/simavr/lib-$$_ARCH$$_BITS/libsimavr.a
+LIBS  += /usr/lib/libsimavr.a
 
 message( $$_ARCH $$_BITS )
 

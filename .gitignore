@@ -1,0 +1,6 @@
+release/
+*.o
+*.so
+build/
+Makefile
+.qmake.stash
